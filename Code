@@ -1,0 +1,144 @@
+--  Updating column names for easier usage
+/* ALTER TABLE bookings
+  RENAME COLUMN `Date` TO rdate,
+  RENAME COLUMN `Time` TO time,
+  RENAME COLUMN `Booking ID` TO booking_id,
+  RENAME COLUMN `Booking Status` TO booking_status,
+  RENAME COLUMN `Customer ID` TO customer_id,
+  RENAME COLUMN `Vehicle Type` TO vehicle_type,
+  RENAME COLUMN `Pickup Location` TO pickup_location,
+  RENAME COLUMN `Drop Location` TO drop_location,
+  RENAME COLUMN `Avg VTAT` TO avg_vtat,
+  RENAME COLUMN `Avg CTAT` TO avg_ctat,
+  RENAME COLUMN `Cancelled Rides by Customer` TO cancels_by_customer,
+  RENAME COLUMN `Reason for cancelling by Customer` TO cancel_reason_customer,
+  RENAME COLUMN `Cancelled Rides by Driver` TO cancels_by_driver,
+  RENAME COLUMN `Driver Cancellation Reason` TO cancel_reason_driver,
+  RENAME COLUMN `Incomplete Rides` TO incomplete_rides,
+  RENAME COLUMN `Incomplete Rides Reason` TO incomplete_reason,
+  RENAME COLUMN `Booking Value` TO booking_value,
+  RENAME COLUMN `Ride Distance` TO ride_distance,
+  RENAME COLUMN `Driver Ratings` TO driver_rating,
+  RENAME COLUMN `Customer Rating` TO customer_rating,
+  RENAME COLUMN `Payment Method` TO payment_method;
+*/
+/*
+SET SQL_SAFE_UPDATES = 0;
+
+UPDATE bookings
+SET customer_id = REPLACE(customer_id, '"', '')
+WHERE customer_id LIKE '%"%'
+
+SET SQL_SAFE_UPDATES = 1
+*/
+
+-- What are the top three reasons customers cancel rides, and how often does each reason occur?
+/*
+select 
+	cancel_reason_customer,
+    count(*) as cancellations
+from bookings
+where cancel_reason_customer is not null
+group by cancel_reason_customer
+order by cancellations desc
+limit 3 
+*/
+-- How many rides were cancelled by drivers compared to customers, and what trend does this show?
+/* 
+ select
+  sum(coalesce(cancels_by_customer)) AS customer_cancellations,
+  SUM(coalesce(cancels_by_driver))   AS driver_cancellations
+FROM bookings;
+*/
+-- What is the average wait time (VTAT) and completion time (CTAT) for each vehicle type?
+/* select 
+	vehicle_type,
+    round(avg(avg_vtat),2) as avg_wait_time,
+    round(avg(avg_ctat),2) as avg_completion_time
+from bookings 
+group by vehicle_type
+*/
+
+-- Which pickup locations generate the highest total booking value, and how do they compare to others?
+/*
+select 
+	pickup_location,
+    sum(booking_value) as total_booking 
+from bookings
+group by pickup_location
+order by total_booking desc
+*/
+-- How do average customer ratings differ across vehicle types?
+/*
+select 
+	vehicle_type,
+    round(avg(customer_rating),2) as avg_customer
+from bookings 
+group by vehicle_type 
+order by avg_customer desc
+*/
+-- What percentage of rides are paid for with each payment method?
+/*select
+ count(*) as total
+from bookings
+-- total rides  is 112864
+
+
+select 
+	payment_method,
+    round(((count(*)/112864) * 100),2)  as avg_rides
+from bookings 
+group by payment_method 
+where 
+*/
+-- Which vehicle type generates the highest revenue per kilometer
+/*
+select 
+	vehicle_type,
+	round((sum(booking_value))/sum(ride_distance),2) per_kilo
+from bookings
+where vehicle_type is not null
+group by vehicle_type
+having sum(ride_distance) > 0
+order by per_kilo desc
+limit 1
+*/
+-- During which hours of the day do most bookings occur, and how does this vary across weekdays vs weekends?
+/*
+select
+	time_of_day,
+	dow,
+    sum(rides) as total_rides
+from(
+select
+	case 
+		when days = 'Saturday' then 'Weekend'
+        when days = 'Sunday' then 'Weekend' 
+else 'Weekday' 
+end as dow,
+time_of_day,
+rides
+from (
+select
+	dayname(rdate) as days,
+    time_of_day,
+    rides
+from(
+select
+case
+    when hour(time) between 05 and 11 then 'Morning'
+    when hour(time) between 12 and 19 then 'Afternoon'
+    when hour(time) between 20 and 23 then 'Evening'
+    when hour(time) between 00 and 04 then 'Early Morning'
+else 'Unkown'
+end as time_of_day,
+count(*) as rides,
+rdate
+from bookings 
+group by time_of_day, rdate
+) as day_group
+	) as dow
+		) as time_day
+group by dow, time_of_day
+order by field(time_of_day,'Early Morning', 'Morning', 'Afternoon', 'Evening'), total_rides desc
+*/
