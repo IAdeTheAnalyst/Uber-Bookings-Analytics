@@ -27,8 +27,7 @@ In this project, I used:
 - **CASE** bucketing, **DATE/TIME** functions (`HOUR()`, `DAYNAME()`)
 - **Data Cleaning** (`RENAME COLUMN`, `REPLACE`, `COALESCE`, `NULLIF`)
 - Custom ordering with `FIELD()` for readable time-of-day output
-
-I also calculated derived performance metrics such as revenue per kilometer and cancellation rates to measure operational efficiency.
+I also gained practical insight into how ride-sharing platforms measure performance across demand, supply, and customer satisfaction dimensions.
 ---
 
 ## Key Insights/ Results 
@@ -55,6 +54,7 @@ Through this project, I strengthened my ability to:
 ---
 
 ## Challenges I Encountered
+
 One challenge I faced was managing time-based grouping and ensuring accurate weekday vs. weekend segmentation. I addressed this by using built-in date functions and custom CASE logic to standardize time buckets.
 
 Another challenge involved handling NULL values and inconsistent categorical fields. I resolved this using COALESCE and REPLACE functions to ensure accurate aggregations.
